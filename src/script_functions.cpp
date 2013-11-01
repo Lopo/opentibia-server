@@ -656,7 +656,14 @@ void Manager::registerFunctions() {
 	registerGlobalFunction("getWorldUpTime()", &Manager::lua_getWorldUpTime);
 
 	// Register the bitlib
+#if LUA_VERSION_NUM > 501
+	lua_newtable(state);
+	luaL_setfuncs(state, lua_BitReg, 0);
+	lua_pushvalue(state, -1);
+	lua_setglobal(state, "bit");
+#else
 	luaL_register(state, "bit", lua_BitReg);
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////

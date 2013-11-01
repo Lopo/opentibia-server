@@ -46,7 +46,7 @@ bool ConfigManager::loadFile(const std::string& _filename)
 	if(L)
 		lua_close(L);
 
-	L = lua_open();
+	L = luaL_newstate();
 
 	if(!L) return false;
 
@@ -255,7 +255,11 @@ std::vector<std::string> ConfigManager::getIPServerList()
 
 	lua_pushnil(L);
 	while (lua_next(L, -2)){
+#if LUA_VERSION_NUM > 501
+		std::string s(lua_tostring(L, -1), lua_rawlen(L, -1));
+#else
 		std::string s(lua_tostring(L, -1), lua_strlen(L, -1));
+#endif
 		servers.push_back(s);
 		lua_pop(L, 1);
 	}
@@ -285,7 +289,11 @@ std::string ConfigManager::getGlobalString(lua_State* _L, const std::string& _id
 		return _default;
 	}
 
+#if LUA_VERSION_NUM > 501
+	int len = (int)lua_rawlen(_L, -1);
+#else
 	int len = (int)lua_strlen(_L, -1);
+#endif
 	std::string ret(lua_tostring(_L, -1), len);
 	lua_pop(_L,1);
 

@@ -178,7 +178,11 @@ int Manager::luaCreateEnum(lua_State* L)
 				// Get int value
 				lua_getfield(L, 4, "__intValue");
 				// int value is at top of stack
+#if LUA_VERSION_NUM > 501
+				if(lua_compare(L, 1, -1, LUA_OPEQ) == 1){
+#else
 				if(lua_equal(L, 1, -1) == 1){
+#endif
 					// pop __intValue
 					lua_pop(L, 1);
 
@@ -229,8 +233,12 @@ int Manager::luaCreateEnum(lua_State* L)
 						// __strValues at -3
 						// str key at -2
 						// str value at -1
-						
+
+#if LUA_VERSION_NUM > 501
+						if(lua_compare(L, -1, -7, LUA_OPEQ) == 1){
+#else
 						if(lua_equal(L, -1, -7) == 1){
+#endif
 							// Pop value, key, __strValues
 							lua_pop(L, 3);
 
@@ -788,7 +796,7 @@ void Manager::registerClass(const std::string& cname)
 	// Create the meta-relations
 	lua_newtable(state); // Class table
 	lua_pushvalue(state, -1); // Another reference to the table
-	lua_setfield(state, LUA_GLOBALSINDEX, cname.c_str());
+	lua_setglobal(state, cname.c_str());
 
 	// Set __name member to class name
 	lua_pushstring(state, cname.c_str());
@@ -816,7 +824,7 @@ void Manager::registerClass(const std::string& cname, const std::string& parent_
 
 	lua_newtable(state); // Class table
 	lua_pushvalue(state, -1); // Another reference to the table
-	lua_setfield(state, LUA_GLOBALSINDEX, cname.c_str());
+	lua_setglobal(state, cname.c_str());
 
 	// Set __name member to class name
 	lua_pushstring(state, cname.c_str());
@@ -828,11 +836,11 @@ void Manager::registerClass(const std::string& cname, const std::string& parent_
 	lua_pop(state, 1); // Pop the class metatable
 
 	// Add the derived class table to the top of the stack
-	lua_getfield(state, LUA_GLOBALSINDEX, cname.c_str());
+	lua_getglobal(state, cname.c_str());
 
 	// Create the meta-relations
 	lua_newtable(state); // Create a small redirect table
-	lua_getfield(state, LUA_GLOBALSINDEX, parent_class.c_str()); // Get the parent table
+	lua_getglobal(state, parent_class.c_str()); // Get the parent table
 	lua_setfield(state, -2, "__index"); // Set the index metamethod for the redirect table to the base class table
 
 	// Set the metatable of the derived class table to the redirect table
@@ -866,7 +874,7 @@ void Manager::registerGlobalFunction(const std::string& fdecl, CallbackFunctionT
 	lua_pushcclosure(state, luaFunctionCallback, 2);
 
 	// Store the function in the global lua table
-	lua_setfield(state, LUA_GLOBALSINDEX, func->name.c_str());
+	lua_setglobal(state, func->name.c_str());
 }
 
 void Manager::registerMemberFunction(const std::string& cname, const std::string& fdecl, CallbackFunctionType cfunc) {
@@ -890,7 +898,7 @@ void Manager::registerMemberFunction(const std::string& cname, const std::string
 	function_map[function_id] = func;
 
 	// Push the class table
-	lua_getfield(state, LUA_GLOBALSINDEX, cname.c_str());
+	lua_getglobal(state, cname.c_str());
 	// Push this manager (pointer cast is important!)
 	lua_pushlightuserdata(state, (Manager*)this);
 	// Push the function ID

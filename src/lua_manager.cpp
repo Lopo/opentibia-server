@@ -117,6 +117,13 @@ void LuaState::getField(int32_t index, int field_index)
 	lua_gettable(state, (index < 0? index - 1 : index));
 }
 
+void LuaState::getGlobal(const std::string& field_name)
+{
+//	if(!isTable(index) && !isUserdata(index))
+//		throw Script::Error("Attempt to index non-table value (" + typeName() + ").");
+	lua_getglobal(state, field_name.c_str());
+}
+
 void LuaState::setField(int32_t index, const std::string& field_name)
 {
 	lua_setfield(state, index, field_name.c_str());
@@ -133,6 +140,11 @@ void LuaState::setField(int32_t index, int32_t field_index)
 			lua_settable(state, index-1);
 		else
 			lua_settable(state, index);
+}
+
+void LuaState::setGlobal(const std::string& field_name)
+{
+	lua_setglobal(state, field_name.c_str());
 }
 
 void LuaState::clearStack()
@@ -832,7 +844,7 @@ LuaStateManager::~LuaStateManager() {
 void LuaStateManager::setupLuaStandardLibrary() {
 
 	// Set a package.path = the script path
-	lua_getfield(state, LUA_GLOBALSINDEX, "package");
+	lua_getglobal(state, "package");
 	assert(lua_istable(state, 1));
 	lua_pushstring(state, (g_config.getString(ConfigManager::DATA_DIRECTORY) + "scripts/?.lua").c_str());
 	lua_setfield(state, -2, "path");
@@ -1080,7 +1092,11 @@ int32_t LuaThread::run(int32_t args)
 	++manager->event_handlers_called;
 
 	// Run the lua code
+#if LUA_VERSION_NUM > 501
+	int32_t ret = lua_resume(state, NULL, args);
+#else
 	int32_t ret = lua_resume(state, args);
+#endif
 
 	//
 	thread_state = ret;

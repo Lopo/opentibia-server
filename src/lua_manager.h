@@ -106,11 +106,11 @@ public:
 
 
 	// Top value as value
-	void setGlobal(const std::string& gname) {setField(LUA_GLOBALSINDEX, gname);}
+	void setGlobal(const std::string& gname);
 	void setRegistryItem(const std::string& rname) {setField(LUA_REGISTRYINDEX, rname);}
 
 	// Pushes value onto the stack
-	void getGlobal(const std::string& gname) {getField(LUA_GLOBALSINDEX, gname);}
+	void getGlobal(const std::string& gname);
 	void getRegistryItem(const std::string& rname) {getField(LUA_REGISTRYINDEX, rname);}
 
 	// Use of references
